@@ -9,7 +9,7 @@
 		}
 		
 		this.$element = $element;
-		this.options = options;
+		this.options = $.extend(this.DEFAULTS, options);
 		this.$wrapper;
 		this.$tagContainer;
 		this.$tagInput;
@@ -52,13 +52,15 @@
 			this.$tagInput.focus();
 		}, this));
 		
-		// Hitting BACKSPACE in the input removes the last tag
-		this.$tagInput.on('keydown', $.proxy(function(event){
-			if(this.$tagInput.val() == '' && event.which == 8){
-				var value = this.$tagContainer.find('li:last').last().attr('data-value');
-				this.unselectOption(value);
-			}
-		}, this));
+		// Hitting BACKSPACE in the input removes the last tag, if configured in options
+		if(true == this.options.enableBackspaceRemove){
+			this.$tagInput.on('keydown', $.proxy(function(event){
+				if(this.$tagInput.val() == '' && event.which == 8){
+					var value = this.$tagContainer.find('li:last').last().attr('data-value');
+					this.unselectOption(value);
+				}
+			}, this));
+		}
 		
 		// Hitting ENTER will add the tag
 		this.$tagInput.on('keyup', $.proxy(function(event){
@@ -68,13 +70,14 @@
 			}
 		}, this));
 		
-		// Add typeahead for suggestions to tag-input
-		this.initTypeahead();
-		
-		this.$tagInput.on('typeahead:selected', $.proxy(function(event, suggestion, dataset){
-			this.selectOption(suggestion.value);
-			this.$tagInput.val('').focus();
-		}, this));
+		// Add typeahead for suggestions to tag-input, if configured in options
+		if(true == this.options.enableTypeahead){
+			this.initTypeahead();
+			this.$tagInput.on('typeahead:selected', $.proxy(function(event, suggestion, dataset){
+				this.selectOption(suggestion.value);
+				this.$tagInput.val('').focus();
+			}, this));
+		}
 		
 		// Trigger custom event
 		this.$element.trigger('multiselecttags.init');
@@ -145,9 +148,11 @@
 				$option = $('<option value="' + value + '">' + value + '</option>');
 				this.$element.append($option);
 				
-				// Refresh typeahead with the new possible suggestion
-				this.$tagInput.typeahead('destroy');
-				this.initTypeahead();
+				// Refresh typeahead with the new possible suggestion, if typeahead is active
+				if(true == this.options.enableTypeahead){
+					this.$tagInput.typeahead('destroy');
+					this.initTypeahead();
+				}
 				
 				// Trigger custom event
 				this.$element.trigger('multiselecttags.afterAddNewTag');
@@ -189,6 +194,12 @@
 		
 		// Trigger custom event
 		this.$element.trigger('multiselecttags.selected');
+	};
+	
+	MultiselectTags.prototype.DEFAULTS = {
+		allowNewTags: false,
+		enableBackspaceRemove: true,
+		enableTypeahead: true
 	};
 	
 	Plugin = function(option){
