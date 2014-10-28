@@ -1,8 +1,15 @@
 (function($){
 	
-	function MultiselectTags(element, options){
+	function MultiselectTags($element, options){
+		
+		// This plugin only works on multiselect elements
+		if($element.prop('tagName') != 'SELECT' || !$element.attr('multiple')){
+			throw Error('Wrong element. jquery-multiselect-tags can only be applied to SELECT-elements with the MULTIPLE-attribute!');
+			return;
+		}
+		
+		this.$element = $element;
 		this.options = options;
-		this.$element = $(element);
 		this.$wrapper;
 		this.$tagContainer;
 		this.$tagInput;
@@ -188,10 +195,10 @@
 		$elements = this;
 		this.each(function(){
 			var $this = $(this);
-			var data = $this.data('asmultiselect');
+			var data = $this.data('multiselecttags');
 			var options = typeof option == 'object' && option;
 			
-			if (!data) $this.data('asmultiselect', (data = new MultiselectTags(this, options)));
+			if (!data) $this.data('multiselecttags', (data = new MultiselectTags($(this), options)));
 			else data[option];
 		});
 	};
