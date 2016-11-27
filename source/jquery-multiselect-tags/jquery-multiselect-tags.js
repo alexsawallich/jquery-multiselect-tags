@@ -36,12 +36,6 @@
 			this.unselectOption(value);
 		}, this));
 		
-		// Make all selected options of the initial select a tag
-		var values = this.$element.val();
-		for(i in values){
-			this.selectOption(values[i], true);
-		}
-		
 		// Append an actual input element to the wrapper to type in new tags
 		this.$tagInput = $('<input type="text" class="tag-input">');
 		this.$tagContainer.after(this.$tagInput);
@@ -63,20 +57,28 @@
 		}
 		
 		// Hitting ENTER will add the tag
-		this.$tagInput.on('keyup', $.proxy(function(event){
+		this.$tagInput.on('keypress', $.proxy(function(event){
 			if(this.$tagInput.val() != '' && event.which == 13){
-				this.selectOption(this.$tagInput.val(), false);
-				this.$tagInput.val('').focus();
+				event.preventDefault();
+				var value = this.findValueByLabel(this.$tagInput.val());
+				this.selectOption(value, false);
+				this.$tagInput.val('').typeahead('close');
 			}
 		}, this));
 		
 		// Add typeahead for suggestions to tag-input, if configured in options
 		if(true == this.options.enableTypeahead){
 			this.initTypeahead();
-			this.$tagInput.on('typeahead:selected', $.proxy(function(event, suggestion, dataset){
+			this.$tagInput.on('typeahead:select', $.proxy(function(event, suggestion, dataset){
 				this.selectOption(suggestion.value);
-				this.$tagInput.val('').focus();
+				this.$tagInput.val('').typeahead('close');
 			}, this));
+		}
+		
+		// Make all selected options of the initial select a tag
+		var values = this.$element.val();
+		for(i in values){
+			this.selectOption(values[i], true);
 		}
 		
 		// Trigger custom event
@@ -99,6 +101,19 @@
 		  displayKey: 'label'
 		});
 	};
+	
+	MultiselectTags.prototype.findValueByLabel = function(label)
+	{
+		Regex = new RegExp(label, 'i');
+		var value = label;
+		this.$element.find('option').each(function() {
+			if (Regex.test($(this).text())) {
+				value = $(this).attr('value');
+			}
+		});
+		
+		return value;
+	}
 	
 	MultiselectTags.prototype.typeaheadCb = function(strs){
 	  return function findMatches(q, cb) {
@@ -143,7 +158,7 @@
 		if($option.length <= 0){
 			if(true == this.options.allowNewTags){
 				// Trigger custom event
-				this.$element.trigger('multiselecttags.beforeAddNewTag');
+				this.$element.trigger('multiselecttags.beforeAddNewTag', [value]);
 				
 				$option = $('<option value="' + value + '">' + value + '</option>');
 				this.$element.append($option);
@@ -155,7 +170,7 @@
 				}
 				
 				// Trigger custom event
-				this.$element.trigger('multiselecttags.afterAddNewTag');
+				this.$element.trigger('multiselecttags.afterAddNewTag', [value]);
 			} else {
 				var $message = $('<li class="text-danger">Adding new tags is not allowed.</li>');
 				this.$tagContainer.append($message);
@@ -164,10 +179,14 @@
 						$(this).remove();
 					});
 				}, 2000);
-				this.$tagInput.val('');
 				
 				// Trigger custom event
 				this.$element.trigger('multiselecttags.notAllowedToAddNewTag');
+				
+				this.$tagInput.val('').focus();
+				if(true == this.options.enableTypeahead){
+					this.$tagInput.typeahead('close');
+				}
 				
 				return;
 			}
@@ -183,6 +202,10 @@
 			// Trigger custom event
 			this.$element.trigger('multiselecttags.alreadySelected');
 			
+			this.$tagInput.val('').focus();
+			if(true == this.options.enableTypeahead){
+				this.$tagInput.typeahead('close');
+			}
 			return;
 		}
 		
@@ -190,16 +213,21 @@
 		$option.attr('selected', 'selected');
 		
 		// Add a new tag in the tag container
-		this.$tagContainer.append('<li data-value="' + value + '"><span class="label label-primary">' + $option.text() + ' <span data-remove="" style="cursor: pointer;">&times;</span></span></li>');
+		this.$tagContainer.append('<li class="list-inline-item" data-value="' + value + '"><span style="font-size: 1em;" class="label label-primary">' + $option.text() + ' <span data-remove="" class="close" style="float: none; font-size: inherit;">&times;</span></span></li>');
 		
 		// Trigger custom event
 		this.$element.trigger('multiselecttags.selected');
+		
+		this.$tagInput.val('').focus();
+		if(true == this.options.enableTypeahead){
+			this.$tagInput.typeahead('close');
+		}
 	};
 	
 	MultiselectTags.prototype.DEFAULTS = {
 		allowNewTags: false,
 		enableBackspaceRemove: true,
-		enableTypeahead: true
+		enableTypeahead: false
 	};
 	
 	Plugin = function(option){
@@ -214,7 +242,7 @@
 		});
 	};
 	
-	$.fn.multselectTags = Plugin;
-	$.fn.multselectTags.Constructor = MultiselectTags;
+	$.fn.multiselectTags = Plugin;
+	$.fn.multiselectTags.Constructor = MultiselectTags;
 	
 })(jQuery);
