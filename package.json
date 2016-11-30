@@ -1,0 +1,27 @@
+{
+  "name": "jquery-multiselect-tags",
+  "version": "0.5.0",
+  "description": "jQuery-plugin to transform a html multiselect element into a tag-input element",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexsawallich/jquery-multiselect-tags.git"
+  },
+  "keywords": [
+    "jquery",
+    "tags",
+    "multiselect",
+    "ui",
+    "ux"
+  ],
+  "author": "Alex Sawallich",
+  "license": "GPL2",
+  "bugs": {
+    "url": "https://github.com/alexsawallich/jquery-multiselect-tags/issues"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^1.0.2",
+    "grunt-contrib-uglify": "^2.0.0"
+  }
+}
